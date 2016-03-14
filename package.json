@@ -1,7 +1,7 @@
 {
   "name": "svg-mapper",
   "version": "0.0.0",
-  "description": "A useful util to read and map SVG data into JSON objects",
+  "description": "A simple svg parser that maps bulk svg data into a single .json output",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
