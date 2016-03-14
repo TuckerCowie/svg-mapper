@@ -11,9 +11,15 @@ function getSvgData(file) {
   var svgData = [];
   // Currently only supports `path` elements
   const svgRegEx = /(path|circle)*(?:\W(?:(cx|cy|r|d)=["']?((?:.(?!["']?\s+(?:\S+)=|[>"']))+.)["']?))+/g;
+  const contents = fs.readFileSync(file, 'utf8');
   var matches;
-  while ((matches = svgRegEx.exec(fs.readFileSync(file, 'utf8'))) !== null) {
-    svgData.push({element: matches[1], attr: matches[2], value: matches[3]});
+  while ((matches = svgRegEx.exec(contents)) !== null) {
+    var attrs = {};
+    attrs[matches[2]] = matches[3];
+    svgData.push({
+      element: matches[1],
+      attrs,
+    });
   }
   if (svgData.length < 0) {
     console.warn('Cannot get SVG Data from ' + file);
@@ -56,7 +62,7 @@ function accumulate(err, files) {
     categories: createCategories(creatIconObjects(files))
   };
 
-  fs.writeFile(output, JSON.stringify(result, null, '\t'), 'utf8');
+  fs.writeFile(output, JSON.stringify(result, null), 'utf8');
 }
 
 // Returns true for every file or folder that meets the following coniditions
