@@ -4,18 +4,22 @@ const recursive = require('recursive-readdir');
 const _ = require('lodash');
 
 const input = process.argv[2] || process.cwd();
+const output = path.resolve(process.argv[3] || process.cwd(), 'svgs.json');
 
 // Runs a RegEx on a file and returns an array of objects containing the element
 function getSvgData(file) {
   var svgData = [];
   // Currently only supports `path` elements
-  const svgRegEx = /(path)*(?:\W(?:(d)=["']?((?:.(?!["']?\s+(?:\S+)=|[>"']))+.)["']?))+/g;
+  const svgRegEx = /(path|circle)*(?:\W(?:(cx|cy|r|d)=["']?((?:.(?!["']?\s+(?:\S+)=|[>"']))+.)["']?))+/g;
   var matches;
   while ((matches = svgRegEx.exec(fs.readFileSync(file, 'utf8'))) !== null) {
     svgData.push({element: matches[1], attr: matches[2], value: matches[3]});
   }
   if (svgData.length < 0) {
     console.warn('Cannot get SVG Data from ' + file);
+    return;
+  } else if (_.some(svgData, ['element', 'circle'])) {
+    console.warn(file + ' contains circle elements and is not included in the output');
     return;
   }
   return svgData;
@@ -52,7 +56,7 @@ function accumulate(err, files) {
     categories: createCategories(creatIconObjects(files))
   };
 
-  fs.writeFile('svgs.json', JSON.stringify(result, null, '\t'), 'utf8');
+  fs.writeFile(output, JSON.stringify(result, null, '\t'), 'utf8');
 }
 
 // Returns true for every file or folder that meets the following coniditions
