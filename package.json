@@ -1,0 +1,16 @@
+{
+  "name": "svg-mapper",
+  "version": "0.0.0",
+  "description": "A useful util to read and map SVG data into JSON objects",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Tucker Cowie <tuckercowie@gmail.com>",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.6.1",
+    "recursive-readdir": "^1.3.0"
+  }
+}
