@@ -20,9 +20,7 @@ function init(input, output, cb) {
       // Creates inital files array to iterate over
       .map(getIconsMeta(input))
       // Extracts SVG information using Regex
-      .map(getSvgData)
-      // Remove meta without any Svg Data
-      .filter('data')
+      .map(getSvgData(input))
       // Group by enclosing folder
       .groupBy('category')
       // Maps each icon object to its category by name
@@ -62,35 +60,35 @@ function getIconsMeta(input) {
   });
 }
 
-// Runs a RegEx on a file and returns an array of objects containing the element
-function getSvgData(file) {
-  var svgData = [];
-  // Currently only supports `path` elements
-  const svgRegEx = /(path|circle)*(?:\W(?:(cx|cy|r|d)=["']?((?:.(?!["']?\s+(?:\S+)=|[>"']))+.)["']?))+/g;
-  var matches;
-  while ((matches = svgRegEx.exec(contents)) !== null) {
-    var attrs = {};
-    if (matches[1] === 'path') {
-      attrs[matches[2]] = matches[3];
-    } else if (matches[1] === 'circle') {
-      const circleElementRegEx = /(?:\W(?:(cx|cy|r)=["']?((?:.(?!["']?\s+(?:\S+)=|[>"']))+.)["']?))+/g;
-      const circleAttrs = matches[0];
-      var circleMatches;
-      while(circleMatches = circleElementRegEx.exec(circleAttrs) !== null) {
-        console.log(circleAttrs);
-      }
-    }
-    svgData.push({
-      element: matches[1],
-      attrs,
-    });
-  }
-  if (svgData.length < 0) {
-    console.warn('Cannot get SVG Data from ' + file);
-    return;
-  } else if (_.some(svgData, ['element', 'circle'])) {
-    console.warn(file + ' contains circle elements and is not included in the output');
-    return;
-  }
-  return svgData;
+/**
+ * Finds all `key="value"` pairs from a string and maps them into an array
+ * @param {String} attributes - XML formatted element string
+ * @returns {Array}
+ */
+function getAttrsArray(attributes) {
+  return attributes.match(/(\S+)=['"](.*?)['"]/g).map(attr => ({
+      attribute: attr.match(/[^"\W]+/g)[0],
+      value: attr.match(/[^"\W]+/g)[1]
+  }));
+}
+
+/**
+ * Functor that takes an input path and returns a mapping function
+ * @param {String} input - File path to a file to parse for matching elements
+ * @returns {Function}
+ */
+function getSvgData(input) {
+  /**
+   * Parses a file for matching SVG `path` and `circle` Elements
+   * @param {Object} iconMeta - An object containing a relative file path at key `file`
+   * @returns {Array} Objects containing any matching path or circle data
+   */
+  return (iconMeta) => {
+    const svgRegEx = /(path|circle){1}((?:\W(?:\S+)=['"](?:.*?)['"])+)/g;
+    const matches = fs.readFileSync(path.resolve(input, iconMeta.file), 'utf8').match(svgRegEx) || [];
+    return _.set(iconMeta, 'elements', matches.map(element => ({
+      type: element.split(' ')[0],
+      attrs: getAttrsArray(element)
+    })));
+  };
 }
